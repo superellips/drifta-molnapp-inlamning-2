@@ -51,8 +51,34 @@ Utöver dessa grundläggande komponenter så finns det andra komponenter som kan
 
 ## Kubernetes objekt
 
+### Deployment
 
+#### Replica set
+
+#### Pod
+
+#### Stateful set
+
+### Service
+
+#### ClusterIP
+
+#### Node Port (?)
+
+#### Load Balancer
+
+#### Ingress
+
+### Config Map
+
+### Namespace
+
+### Job
 
 ## Verktygslådan
+
+### kubectl
+
+### helm
 
 ## Driftsättning
