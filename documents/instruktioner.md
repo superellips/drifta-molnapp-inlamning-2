@@ -1,4 +1,4 @@
-**Inlämningsuppgift**
+# Inlämningsuppgift
 
 1. Beskriv övergripande de komponenter som ingår i ett kuberneteskluster. Redogör för respektive komponents huvudsakliga funktion.
 2. Redogör för några av de vanligaste objekten (kind:) i ett kuberneteskluster och deras huvudsakliga funktion och användningsområde. Använd gärna exempel för att tydligare illustrera hur de används i praktiken.
