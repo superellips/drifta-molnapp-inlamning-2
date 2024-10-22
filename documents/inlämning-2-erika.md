@@ -73,6 +73,27 @@ Ett objekt som ser till att poddar som har till syfte att genomföra en process 
 
 ### kubectl
 
+Det primära verktyget som används för att agera mot ett kluster, det ansluter alltså till _kube-apiserver_ för att åstadkomma det vi säger åt det att göra. Några användbara kommandon är:
+
+- `kubectl --help`
+- `kubectl <command> --help`
+- `kubectl options`
+
 ### helm
+
+Ett verktyg som kombinerar flera olika beskrivna kubernetes objekt och sedan kör upp dessa tillsammans (vilket kallas för en _chart_). Det går även att separera ut delar som variabler för att kunna köra upp saker med olika val beroende på i vilken miljö en arbetar mot (t.ex. att använda nodeport när det körs lokalt men använda loadbalancer när det körs på en molnplattform som har stöd för det). Några använbara kommandon är:
+
+- `helm --help`
+- `helm <command> --help`
+
+Helm verkar inte komma automatiskt med autocompletion men har en instruktion som kan genererar kod som åstadkommer det, så här fick jag det att samarbeta med bash:
+
+```bash
+# Skriv output from helm till en av konfigurationsfilerna för bash, 
+# t.ex. .bashrc (eller till någon annan fil som .bashrc inkluderar).
+helm completion bash > ~/.bashrc
+# Läs in förändringen för att använda completion
+. ~/.bashrc
+```
 
 ## Driftsättning
