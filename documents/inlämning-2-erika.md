@@ -97,3 +97,22 @@ helm completion bash > ~/.bashrc
 ```
 
 ## Driftsättning
+
+### Utgångspunkt
+
+### Verktyg
+
+Min känsla är att det har blivit fler och fler verktyg, för den här uppgiften så har jag använt några av dom vanligt förekommande (VS-Code, git & github, docker desktop & cli) utöver dessa så kommer jag också att luta mig mot:
+
+- kind ([Kuberenetes IN Docker](https://github.com/kubernetes-sigs/kind))
+- kubectl
+- helm
+- argocd
+
+### Genomförande
+
+#### Hitta ett kluster att arbeta mot
+
+
+
+### Reflektioner
