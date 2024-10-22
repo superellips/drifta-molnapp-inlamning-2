@@ -1,0 +1,19 @@
+@model TipsRundan.Application.DataTransferObjects.QuizDTO
+
+<h1>@Model.Title</h1>
+
+<h2>Questions:</h2>
+@for (int i = 0; i < Model.Questions.Count; i++)
+{
+    <div>
+        <h3>Question @i + 1: @Model.Questions[i].Inquiry</h3>
+        <ul>
+            @for (int j = 0; j < Model.Questions[i].Options.Count; j++)
+            {
+                <li>@Model.Questions[i].Options[j]</li>
+            }
+        </ul>
+    </div>
+}
+
+<a href="@Url.Action("Index", "Quiz")">Back to all quizzes</a>

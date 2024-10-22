@@ -1,0 +1,23 @@
+@model TipsRundan.Web.Models.RegisterUserView;
+
+@if (!ViewData.ModelState.IsValid)
+{
+  <div>
+    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+    {
+      <p>@error.ErrorMessage</p>
+    }
+  </div>
+}
+
+<form method="post">
+    <label>Username:</label>
+    <input type="text" asp-for="Username">
+    <br>
+    <label>Email:</label>
+    <input type="email" asp-for="Email">
+    <br>
+    <label>Password:</label>
+    <input type="password" asp-for="Password">
+    <button type="submit">Submit</button>
+</form>

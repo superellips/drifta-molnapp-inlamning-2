@@ -1,0 +1,45 @@
+@model TipsRundan.Web.Models.CreateQuizView // Använder CreateQuizViewModel för att skicka data till vyn
+
+<h1>Let´s Create A New Quiz!</h1>   <!-- Rubrik för sidan -->
+
+<form asp-action="Create" method="post"> <!-- Info användaren fyller i skickas till servern, Create anropar controller -->
+    <!-- Fält för quizets titel -->
+    <div class="form-group">
+        <label asp-for="Title"></label> <!-- Text som visar bredvid inmatningsfältet -->
+        <input asp-for="Title" class="form-control" /> <!-- Skapar själva inmatningsfältet -->
+        <span asp-validation-for="Title" class="text-danger"></span>  <!-- Visar felmeddelande om användaren inte fyllt i fältet -->
+    </div>
+
+    <!-- Fält för quizets beskrivning -->
+    <div class="form-group">
+        <label asp-for="Description"></label> <!-- Text som visar bredvid inmatningsfältet -->
+        <textarea asp-for="Description" class="form-control"></textarea> <!-- Skapar inmatningsfältet -->
+        <span asp-validation-for="Description" class="text-danger"></span> <!-- Visar felmeddelande om användaren inte fyllt i fältet -->
+    </div>
+
+    <!-- Frågor: Här kan du skapa fält för att lägga till frågor -->
+    <div class="form-group">
+        <label>Write your questions below</label>
+        @for (int i = 0; i < Model.Questions.Count; i++) // Loopar igenom alla frågor i listan
+        {
+            <div class="form-group">
+                <label asp-for="@Model.Questions[i].Inquiry">Question @i </label> <!-- Text som visar bredvid inmatningsfältet -->
+                <input asp-for="@Model.Questions[i].Inquiry" class="form-control" />   <!-- Skapar inmatningsfältet -->
+                
+                <!-- Här kan du lägga till fält för svarsalternativ -->
+                <label> Options for your question </label>  <!-- Text som visar bredvid inmatningsfältet -->
+                @for (int j = 0; j < 3; j++) // Loopar igenom alla svarsalternativ i listan
+                {
+                    <input type="radio" asp-for="@Model.CorrectAnswers[i]" value="@j"><label>IsCorrect</label>
+                    <input asp-for="@Model.Questions[i].Options[j]" class="form-control" />
+                }
+            </div>
+          }
+    </div> 
+
+     <!-- Lägg till en fråga-knapp -->
+    <button type="submit" name="AddQuestion" value="true" class="btn btn-secondary">Add Question</button>
+
+    <!-- Submit-knapp för att skicka formuläret -->
+    <button type="submit" class="btn btn-primary">Create Quiz</button>
+</form>

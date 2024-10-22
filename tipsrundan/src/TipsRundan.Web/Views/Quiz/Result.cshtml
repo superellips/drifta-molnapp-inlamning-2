@@ -1,0 +1,24 @@
+@model TipsRundan.Web.Models.ResultView;
+
+<p>Correct Answers: @Model.NumberOfCorrectAnswers</p>
+<p>Total Questions: @Model.NumberOfQuestions</p>
+
+@for (int i = 0; i < @Model.Questions.Count; i++)
+{
+    <details>
+        <summary>@Model.Questions[@i]</summary>
+        <ul>
+            @for (int j = 0; j < @Model.Options[@i].Count(); j++)
+            {
+                @if (@Model.CorrectOptions[@i] == @j && @Model.ChoosenOptions[@i] == @j)
+                {
+                <li>@Model.Options[@i][@j] (You got it correct!)</li>
+                } else if (@Model.CorrectOptions[@i] == @j) {
+                <li>@Model.Options[@i][@j] (The correct option.)</li>
+                } else {
+                <li>@Model.Options[@i][@j]</li>
+                }
+            }
+        </ul>
+    </details>
+}

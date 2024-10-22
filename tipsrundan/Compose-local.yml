@@ -1,0 +1,18 @@
+services:
+  db:
+    image: mongo
+    restart: always
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+  express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: db
+
+volumes:
+  mongodb-data:

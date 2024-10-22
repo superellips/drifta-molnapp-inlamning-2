@@ -1,0 +1,16 @@
+services:
+  app:
+    image: tipsrundan
+    restart: always
+    environment:
+      - DbImplementation=MongoDb
+      - MongoDbConnection=mongodb://db:27017
+    ports:
+      - "8080:8080"
+  db:
+    image: mongo
+    restart: always
+    volumes:
+      - mongodb-data:/data/db
+volumes:
+  mongodb-data:

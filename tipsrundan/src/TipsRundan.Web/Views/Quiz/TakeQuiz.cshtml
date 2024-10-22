@@ -1,0 +1,16 @@
+@model TipsRundan.Web.Models.TakeQuizView;
+
+<h1>Take Quiz</h1>
+
+<form method="post" asp-action="Result">
+<input type="hidden" value="@Model.Id" asp-for="@Model.Id">
+@for (int i = 0; i < @Model.Answers.Count; i++)
+{
+        <h2>@Model.Questions[i].Inquiry</h2>
+        @for (int j = 0; j < @Model.Questions[i].Options.Count; j++)
+        {
+                <input type="radio" asp-for="@Model.Answers[i]" value="@j"><label>@Model.Questions[i].Options[j]</label>
+        }
+}
+<button type="submit">Submit</button>
+</form>
