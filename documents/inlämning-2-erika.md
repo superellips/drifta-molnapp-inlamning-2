@@ -79,6 +79,11 @@ Det primära verktyget som används för att agera mot ett kluster, det ansluter
 - `kubectl <command> --help`
 - `kubectl options`
 
+Sedan vill jag nog också speciellt nämna att följande är bra att ha när en arbetar mot olika kluster:
+
+- `kubectl config get-contexts`
+- `kubectl config use-context <context-name>`
+
 ### helm
 
 Ett verktyg som kombinerar flera olika beskrivna kubernetes objekt och sedan kör upp dessa tillsammans (vilket kallas för en _chart_). Det går även att separera ut delar som variabler för att kunna köra upp saker med olika val beroende på i vilken miljö en arbetar mot (t.ex. att använda nodeport när det körs lokalt men använda loadbalancer när det körs på en molnplattform som har stöd för det). Några använbara kommandon är:
@@ -104,15 +109,34 @@ helm completion bash > ~/.bashrc
 
 Min känsla är att det har blivit fler och fler verktyg, för den här uppgiften så har jag använt några av dom vanligt förekommande (VS-Code, git & github, docker desktop & cli) utöver dessa så kommer jag också att luta mig mot:
 
-- kind ([Kuberenetes IN Docker](https://github.com/kubernetes-sigs/kind))
+- minikube
 - kubectl
 - helm
 - argocd
 
 ### Genomförande
 
+Min plan är att driftsätta applikationen [tipsrundan](https://github.com/CuriosityFanClub/tipsrundan) från grupparbetet med hjälp av github och ArgoCD.
+
 #### Hitta ett kluster att arbeta mot
 
+Min erfarenhet dom senaste veckorna har varit att kubernetes genom docker desktop inte har varit speciellt smidigt linux. Som ett alternativ så har jag valt att köra kubernetes lokalt med minikube istället. Jag tror inte att detta innebär några faktiskta skillnader mer än att den context mot vilken jag arbetar är `minikube` istället för `docker-desktop`.
 
+Även när det kommer till ett kluster på en molnplattform så är min känsla att skillnaderna är minimala och jag kommer inte gå in i några detaljer på hur ett sådant provisioneras. Jag kommer utgå ifrån att du lyckas hitta både ett lokalt kluster och ett kluster hos en molnleverantör att agera mot.
+
+Säkerställ med `kubectl config current-context` att du vänder dig mot det kluster du förväntar dig.
+
+#### Stoppa in källkoden i ett nytt repository
+
+Jag tänker utgå ifrån ett nytt repository på github och i detta lägga till källkoden för _Tipsrundan_:
+
+```bash
+# Klona repositoriet
+git clone https://github.com/CuriosityFanClub/tipsrundan.git
+# Ta bort lite mappar som inte behövs och som kan förvirra git & github
+rm -rf tipsrundan/.git tipsrundan/.github
+# Gör en commit så att allting kommer med i git
+git add tipsrundan/* && git commit -m "Adds the tipsrundan application."
+```
 
 ### Reflektioner
