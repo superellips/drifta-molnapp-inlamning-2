@@ -34,7 +34,7 @@ jobs:
 
       - name: Update manifests
         run: |
-          sed -i 's|ghcr.io/${{ github.repository_owner }}/tipsrundan:.*|ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }}' manifests/tipsrundan-deployment.yml
+          sed -i 's|ghcr.io/${{ github.repository_owner }}/tipsrundan:.*|ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }}|' manifests/tipsrundan-deployment.yml
     
       - name: Commit and push updated manifests
         run: |
