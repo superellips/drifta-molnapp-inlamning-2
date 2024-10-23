@@ -32,18 +32,19 @@ jobs:
           docker build -t ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }} .
           docker push ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }}
 
+      - name: Configure git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+          git fetch
+          git checkout prod
+        
       - name: Update manifests
         run: |
           sed -i 's|ghcr.io/${{ github.repository_owner }}/tipsrundan:.*|ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }}|' manifests/tipsrundan-deployment.yml
     
       - name: Commit and push updated manifests
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "github-actions@github.com"
-          git fetch
           git add manifests/tipsrundan-deployment.yml
-          git stash
-          git checkout prod
-          git stash pop
           git commit -m "Automatic update of manifests done within github actions for commit: ${{ github.sha }}"
           git push
