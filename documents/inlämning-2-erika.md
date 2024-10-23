@@ -254,7 +254,7 @@ Exponera argocd-server med: `kubectl port-forward svc/argocd-server 8080:443 -n 
 
 Och sedan logga in från ett annat shell med: `argocd login localhost:8080 --username admin --password $(argocd admin initial-password -n argocd | head -n 1) --insecure`
 
-Sedan vill vi skapa en ny applikation i ArgoCD med: `argocd app create tipsrundan --repo https://github.com/[DITT_GH_NAMN]/[REPO_NAMN].git --revision prod --path manifests --dest-server https://kubernetes.default.svc --sync-policy auto --auto-prune --self-heal` (använd dina uppgifter för användarnamn och repository)
+Sedan vill vi skapa en ny applikation i ArgoCD med: `argocd app create tipsrundan --repo https://github.com/[DITT_GH_NAMN]/[REPO_NAMN].git --revision prod --path manifests --dest-namespace default --dest-server https://kubernetes.default.svc --sync-policy auto --auto-prune --self-heal` (använd dina uppgifter för användarnamn och repository)
 
 #### Helm
 
