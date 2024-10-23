@@ -107,7 +107,7 @@ helm completion bash > ~/.bashrc
 
 ### Verktyg
 
-Min känsla är att det har blivit fler och fler verktyg, för den här uppgiften så har jag använt några av dom vanligt förekommande (VS-Code, git & github, docker desktop & cli) utöver dessa så kommer jag också att luta mig mot:
+Min känsla är att det har blivit fler och fler verktyg, för den här uppgiften så har jag använt några av dom vanligt förekommande (VS-Code, git & github, docker cli) utöver dessa så kommer jag också att luta mig mot:
 
 - minikube
 - kubectl
@@ -131,17 +131,19 @@ Säkerställ med `kubectl config current-context` att du vänder dig mot det klu
 Jag tänker utgå ifrån ett nytt repository på github (samt att du kan skapa detta själv) och i detta lägga till källkoden för _Tipsrundan_:
 
 ```bash
-# Klona repositoriet
+# Clone repository
 git clone https://github.com/CuriosityFanClub/tipsrundan.git
-# Ta bort lite mappar som inte behövs och som kan förvirra git & github
-rm -rf tipsrundan/.git tipsrundan/.github tipsrundan/.gitignore
-# Gör en commit så att allting kommer med i git
+# Remove some files and foleders so as to not confuse git & github
+rm -rf tipsrundan/.git tipsrundan/.github
+# Make a commit
 git add tipsrundan/* && git commit -m "Adds the tipsrundan application."
 ```
 
-Vi behöver för detta repository tillåta actions att göra commits genom att navigera till _settings_ för det och under _actions_ och sedan _general_ ändra _Workflow permissions_ till _Read and write permissions_.(`settings->actions->general->Workflow permissions => Read and write permissions`)
+#### Github actions workflow
 
-Vi kommer också vilja ha ett workflow för github actions i `.github/workflows/docker-image.yml`. Min utgångspunkt är följande:
+Vi behöver för vårat github repository tillåta github actions att göra commits genom att navigera till _settings_ för det och under _actions_ och sedan _general_ ändra _Workflow permissions_ till _Read and write permissions_.(`settings->actions->general->Workflow permissions => Read and write permissions`)
+
+Vi kommer också vilja ha en workflow-fil i `.github/workflows/docker-image.yml`. Min utgångspunkt är följande:
 
 ```yaml
 name: Builds and pushes application image to github container registry
@@ -194,6 +196,68 @@ jobs:
           git push
 ```
 
-#### 
+Med ett definierat workflow så behöver vi också lite filer för kubernetes, alla dessa finns i slutet av dokumentet men här är en som vi kan börja med för att se om allting fungerar, `manifests/tipsrundan-deployment.yml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tipsrundan-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tipsrundan-webapp
+  template:
+    metadata:
+      labels:
+        app: tipsrundan-webapp
+    spec:
+      containers:
+      - name: tipsrundan-container
+        image: ghcr.io/[DITT_GH_NAMN]/tipsrundan:testing
+        ports:
+        - containerPort: 80
+```
+
+Sist men inte minst behöver vi se till att allt detta pushas till github:
+
+```bash
+# Add and commit
+git add . && git commit -m "Updates the workflow and manifests."
+# Push to the main branch
+git push
+# Create and checkout a branch named prod
+git branch prod && git checkout prod
+# Ensure that github is aware of this branch aswell
+git push
+# And checkout the main branch again
+git checkout main
+```
+
+#### Installera och konfigurera argocd
+
+ArgoCD kommer att leva innuti vårat kluster och kommer att kunna interagera med det innifrån. Det kommer också att lyssna efter förändringar i vårat repository och utifrån dessa försöka låta kubernetes nå det tillstånd som vi önskar.
+
+För att installera argocd i klustret:
+
+```bash
+# Create a namespace for argocd
+kubectl create namespace argocd
+# Apply the argo project installation file
+kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml -n argocd
+```
+
+Installationen kommer ta en stund, men när den är färdig kan vi logga in med argocds cli enligt följande steg:
+
+Exponera argocd-server med: `kubectl port-forward svc/argocd-server 8080:443 -n argocd`
+
+Och sedan logga in från ett annat shell med: `argocd login localhost:8080 --username admin --password $(argocd admin initial-password -n argocd | head -n 1) --insecure`
+
+Sedan vill vi skapa en ny applikation i ArgoCD med: `argocd app create tipsrundan --repo https://github.com/[DITT_GH_NAMN]/[REPO_NAMN].git --revision prod --path manifests --dest-server https://kubernetes.default.svc --sync-policy auto --auto-prune --self-heal` (använd dina uppgifter för användarnamn och repository)
+
+#### Helm
+
+
 
 ### Reflektioner
