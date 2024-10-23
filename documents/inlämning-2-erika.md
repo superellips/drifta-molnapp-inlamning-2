@@ -128,15 +128,72 @@ Säkerställ med `kubectl config current-context` att du vänder dig mot det klu
 
 #### Stoppa in källkoden i ett nytt repository
 
-Jag tänker utgå ifrån ett nytt repository på github och i detta lägga till källkoden för _Tipsrundan_:
+Jag tänker utgå ifrån ett nytt repository på github (samt att du kan skapa detta själv) och i detta lägga till källkoden för _Tipsrundan_:
 
 ```bash
 # Klona repositoriet
 git clone https://github.com/CuriosityFanClub/tipsrundan.git
 # Ta bort lite mappar som inte behövs och som kan förvirra git & github
-rm -rf tipsrundan/.git tipsrundan/.github
+rm -rf tipsrundan/.git tipsrundan/.github tipsrundan/.gitignore
 # Gör en commit så att allting kommer med i git
 git add tipsrundan/* && git commit -m "Adds the tipsrundan application."
 ```
+
+Vi behöver för detta repository tillåta actions att göra commits genom att navigera till _settings_ för det och under _actions_ och sedan _general_ ändra _Workflow permissions_ till _Read and write permissions_.(`settings->actions->general->Workflow permissions => Read and write permissions`)
+
+Vi kommer också vilja ha ett workflow för github actions i `.github/workflows/docker-image.yml`. Min utgångspunkt är följande:
+
+```yaml
+name: Builds and pushes application image to github container registry
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'tipsrundan/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+    
+      - name: Authenticate with github registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        run: |
+          cd tipsrundan
+          docker build -t ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }} .
+          docker push ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }}
+
+      - name: Update manifests
+        run: |
+          sed -i 's|ghcr.io/${{ github.repository_owner }}/tipsrundan:.*|ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }}' manifests/tipsrundan-deployment.yml
+    
+      - name: Commit and push updated manifests
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+          git add manifests/tipsrundan-deployment.yml
+          git stash
+          git checkout prod
+          git stash pop
+          git commit -m "Automatic update of manifests done within github actions for commit: ${{ github.sha }}"
+          git push
+```
+
+#### 
 
 ### Reflektioner

@@ -1,0 +1,48 @@
+name: Builds and pushes application image to github container registry
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'tipsrundan/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+    
+      - name: Authenticate with github registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        run: |
+          cd tipsrundan
+          docker build -t ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }} .
+          docker push ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }}
+
+      - name: Update manifests
+        run: |
+          sed -i 's|ghcr.io/${{ github.repository_owner }}/tipsrundan:.*|ghcr.io/${{ github.repository_owner }}/tipsrundan:${{ github.sha }}' manifests/tipsrundan-deployment.yml
+    
+      - name: Commit and push updated manifests
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+          git add manifests/tipsrundan-deployment.yml
+          git stash
+          git checkout prod
+          git stash pop
+          git commit -m "Automatic update of manifests done within github actions for commit: ${{ github.sha }}"
+          git push
