@@ -16,4 +16,7 @@ spec:
       - name: tipsrundan-container
         image: ghcr.io/superellips/tipsrundan:testing
         ports:
-        - containerPort: 80
+        - containerPort: 8080
+        envFrom: 
+        - configMapRef:
+            name: app-config
