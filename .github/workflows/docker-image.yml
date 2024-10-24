@@ -46,7 +46,6 @@ jobs:
     
       - name: Commit and push updated manifests
         run: |
-          git pull
           git add manifests/tipsrundan-deployment.yml
           git commit -m "Automatic update of manifests done within github actions for commit: ${{ github.sha }}"
           git push
