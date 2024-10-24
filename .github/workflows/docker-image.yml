@@ -36,8 +36,8 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
-          git fetch
-          git checkout origin/prod
+          git fetch origin prod:prod
+          git checkout prod
           git pull
           git merge origin/main -X theirs
         
