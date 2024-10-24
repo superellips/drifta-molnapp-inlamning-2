@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: tipsrundan-container
-        image: ghcr.io/superellips/tipsrundan:testing
+        image: ghcr.io/superellips/tipsrundan:1d57b087023da47597c5441d776c251983c04cd1
         ports:
         - containerPort: 8080
         envFrom: 
