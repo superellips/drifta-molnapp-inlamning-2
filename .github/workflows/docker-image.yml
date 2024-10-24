@@ -39,8 +39,7 @@ jobs:
           git config pull.rebase false
           git fetch
           git checkout prod
-          git pull origin prod
-          git merge origin/main -X theirs
+          git merge origin/main --allow-unrelated-histories -X theirs
         
       - name: Update manifests
         run: |
