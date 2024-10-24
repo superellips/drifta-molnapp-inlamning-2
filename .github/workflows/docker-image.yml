@@ -38,9 +38,9 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git fetch
           git checkout prod
+          git pull
           git rebase main -s recursive -X theirs
           git push
-          git pull
         
       - name: Update manifests
         run: |
