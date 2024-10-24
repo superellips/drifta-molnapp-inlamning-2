@@ -71,27 +71,21 @@ Ett objekt som ser till att poddar som har till syfte att genomföra en process 
 
 ## Verktygslådan
 
+Här är ett urval av verktyg som kan användas för att administerar ett kubernetes kluster. Jag känner inte att jag riktigt förstår vad frågeställningen om _användbara kommandon_ har för syfte och det kommer nog framgå av vilka exempel jag har valt ut. För att inte behöva upprepa mig så är följande två dom, för mig, mest användbara oavsett verktyg:
+
+- `<tool> --help`
+- `<tool> <command> --help`
+
 ### kubectl
 
 Det primära verktyget som används för att agera mot ett kluster, det ansluter alltså till _kube-apiserver_ för att åstadkomma det vi säger åt det att göra. Några användbara kommandon är:
-
-- `kubectl --help`
-- `kubectl <command> --help`
-- `kubectl options`
-
-Sedan vill jag nog också speciellt nämna att följande är bra att ha när en arbetar mot olika kluster:
 
 - `kubectl config get-contexts`
 - `kubectl config use-context <context-name>`
 
 ### helm
 
-Ett verktyg som kombinerar flera olika beskrivna kubernetes objekt och sedan kör upp dessa tillsammans (vilket kallas för en _chart_). Det går även att separera ut delar som variabler för att kunna köra upp saker med olika val beroende på i vilken miljö en arbetar mot (t.ex. att använda nodeport när det körs lokalt men använda loadbalancer när det körs på en molnplattform som har stöd för det). Några använbara kommandon är:
-
-- `helm --help`
-- `helm <command> --help`
-
-Helm verkar inte komma automatiskt med autocompletion men har en instruktion som kan genererar kod som åstadkommer det, så här fick jag det att samarbeta med bash:
+Ett verktyg som kombinerar flera olika beskrivna kubernetes objekt och sedan kör upp dessa tillsammans (vilket kallas för en _chart_). Det går även att separera ut delar som variabler för att kunna köra upp saker med olika val beroende på i vilken miljö en arbetar mot (t.ex. att använda nodeport när det körs lokalt men använda loadbalancer när det körs på en molnplattform som har stöd för det). Helm verkar inte installeras med autocompletion men det går att åstadkomma så här (för bash):
 
 ```bash
 # Skriv output from helm till en av konfigurationsfilerna för bash, 
@@ -101,14 +95,25 @@ helm completion bash > ~/.bashrc
 . ~/.bashrc
 ```
 
+### argocd
+
+Verktyg för att interagera med en argocd server som kör i ett kluster, dess funktioner finns också tillgängliga i ett webbgränssnitt men hur det används är svårare att beskriva i kod. Likt helm så kan autocompletion fixas med någon variant av:
+
+`argocd completion bash > ~/.bashrc`
+
 ## Driftsättning
 
 ### Utgångspunkt
 
 ### Verktyg
 
-Min känsla är att det har blivit fler och fler verktyg, för den här uppgiften så har jag använt några av dom vanligt förekommande (VS-Code, git & github, docker cli) utöver dessa så kommer jag också att luta mig mot:
+Dom verktyg som jag primärt har lutat mig åt för att lösa den här uppgiften:
 
+- Debian (OS)
+- VS Code
+- git & Github
+- docker cli
+- dotnet
 - minikube
 - kubectl
 - helm
@@ -120,11 +125,11 @@ Min plan är att driftsätta applikationen [tipsrundan](https://github.com/Curio
 
 #### Hitta ett kluster att arbeta mot
 
-Min erfarenhet dom senaste veckorna har varit att kubernetes genom docker desktop inte har varit speciellt smidigt linux. Som ett alternativ så har jag valt att köra kubernetes lokalt med minikube istället. Jag tror inte att detta innebär några faktiskta skillnader mer än att den context mot vilken jag arbetar är `minikube` istället för `docker-desktop`.
+Min erfarenhet dom senaste veckorna har varit att kubernetes genom docker desktop inte har varit speciellt smidigt under linux. Som ett alternativ så har jag valt att köra kubernetes lokalt med `minikube` istället. Jag tror inte att detta innebär några faktiskta skillnader mer än att den context mot vilken jag arbetar är `minikube` istället för `docker-desktop`.
 
 Även när det kommer till ett kluster på en molnplattform så är min känsla att skillnaderna är minimala och jag kommer inte gå in i några detaljer på hur ett sådant provisioneras. Jag kommer utgå ifrån att du lyckas hitta både ett lokalt kluster och ett kluster hos en molnleverantör att agera mot.
 
-Säkerställ med `kubectl config current-context` att du vänder dig mot det kluster du förväntar dig.
+Säkerställ med `kubectl config current-context` att du vänder dig mot det kluster som du förväntar dig.
 
 #### Stoppa in källkoden i ett nytt repository
 
@@ -135,8 +140,8 @@ Jag tänker utgå ifrån ett nytt repository på github (samt att du kan skapa d
 git clone https://github.com/CuriosityFanClub/tipsrundan.git
 # Remove some files and foleders so as to not confuse git & github
 rm -rf tipsrundan/.git tipsrundan/.github
-# Make a commit
-git add tipsrundan/* && git commit -m "Adds the tipsrundan application."
+# Create a commit
+git add tipsrundan/* && git commit -m "Adds the tipsrundan application." && git push
 ```
 
 #### Github actions workflow
@@ -161,7 +166,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: read
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -215,7 +220,7 @@ spec:
     spec:
       containers:
       - name: tipsrundan-container
-        image: ghcr.io/[DITT_GH_NAMN]/tipsrundan:testing
+        image: ghcr.io/[DITT_GH_NAMN]/tipsrundan:latest
         ports:
         - containerPort: 80
 ```
@@ -227,7 +232,7 @@ Sist men inte minst behöver vi se till att allt detta pushas till github:
 git add . && git commit -m "Updates the workflow and manifests."
 # Push to the main branch
 git push
-# Create and checkout a branch named prod
+# Create and checkout a branch named prod (to be used later)
 git branch prod && git checkout prod
 # Ensure that github is aware of this branch aswell
 git push
@@ -250,14 +255,28 @@ kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manif
 
 Installationen kommer ta en stund, men när den är färdig kan vi logga in med argocds cli enligt följande steg:
 
-Exponera argocd-server med: `kubectl port-forward svc/argocd-server 8080:443 -n argocd`
+Exponera argocd-server i ett shell med: `kubectl port-forward svc/argocd-server 8080:443 -n argocd`
 
-Och sedan logga in från ett annat shell med: `argocd login localhost:8080 --username admin --password $(argocd admin initial-password -n argocd | head -n 1) --insecure`
+Och sedan logga in från ett annat med: `argocd login localhost:8080 --username admin --password $(argocd admin initial-password -n argocd | head -n 1) --insecure`
 
-Sedan vill vi skapa en ny applikation i ArgoCD med: `argocd app create tipsrundan --repo https://github.com/[DITT_GH_NAMN]/[REPO_NAMN].git --revision prod --path manifests --dest-namespace default --dest-server https://kubernetes.default.svc --sync-policy auto --auto-prune --self-heal` (använd dina uppgifter för användarnamn och repository)
+Sedan vill vi skapa en ny applikation i ArgoCD med: `argocd app create tipsrundan --repo https://github.com/[GH_USER]/[REPO].git --revision prod --path manifests --dest-namespace default --dest-server https://kubernetes.default.svc --sync-policy auto --auto-prune --self-heal` (använd dina uppgifter för användarnamn och repository)
 
-#### Helm
+#### Avslutningsvis
 
+Som avslutning så behöver min lösning också följande filer under `manifests`:
 
+- tipsrundan-service.yml
+- tipsrundan-configmap.yml
+- mongodb-statefulset.yml
+- mongodb-service.yml
 
 ### Reflektioner
+
+Att låta github actions pusha till `prod`.
+Lösningen innehåller samma svaghet när det kommer till data persistens som tidigare.
+Att arbeta mot ett kluster hos en molnleverantör.
+Annat som kan utforskas i kubernetes.
+
+## Mina filer
+
+Dessa bör alla finnas närvarande i det zip-arkiv som bör bifogas tillsammans med den här inlämningen, dom finns bara här utifall att detta arkiv inte har bifogats.
