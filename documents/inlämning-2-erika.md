@@ -105,9 +105,15 @@ Verktyg för att interagera med en argocd server som kör i ett kluster, dess fu
 
 ### Utgångspunkt
 
+Mitt mål är att med ArgoCD och github actions driftsätta applikationen från grupparbetet (_tipsrundan_). Jag kommer primärt att utforma min lösning för ett lokalt kluster på min laptop, mitt kluster kommer vara skapat med _minikube_, min känsla är att kubernetes kluster fungerar i grunden likadant oavsett var eller vem som tillhandhåller det. Valet av _minikube_ är resultatet av att docker desktop i min mening varit ganska klumpigt under linux i jämförelse med docker cli. 
+
+Min lösning kommer antagligen skilja sig något från vad jag presenterar i min guide, det vill säga: Guiden bör i sig ses som en grund som ska anpassas för att nå olika resultat, exempelvis driftsättning på ett kluster tillhandahållet av en molnleverantör. 
+
+Jag kommer anta att du som läser det här redan har god förståelse för docker, git och andra kringliggande teknologier, jag kommer inte ge detaljerade instruktioner för installation och konfiguration av verktyg utan förväntar mig att du kan hitta den informationen på egen hand. I praktiken så är det framförallt Lars som är min målgrupp.
+
 ### Verktyg
 
-Dom verktyg som jag primärt har lutat mig åt för att lösa den här uppgiften:
+Dom verktyg som jag primärt har lutat mig på för att lösa den här uppgiften:
 
 - Debian (OS)
 - VS Code
@@ -125,20 +131,16 @@ Min plan är att driftsätta applikationen [tipsrundan](https://github.com/Curio
 
 #### Hitta ett kluster att arbeta mot
 
-Min erfarenhet dom senaste veckorna har varit att kubernetes genom docker desktop inte har varit speciellt smidigt under linux. Som ett alternativ så har jag valt att köra kubernetes lokalt med `minikube` istället. Jag tror inte att detta innebär några faktiskta skillnader mer än att den context mot vilken jag arbetar är `minikube` istället för `docker-desktop`.
-
-Även när det kommer till ett kluster på en molnplattform så är min känsla att skillnaderna är minimala och jag kommer inte gå in i några detaljer på hur ett sådant provisioneras. Jag kommer utgå ifrån att du lyckas hitta både ett lokalt kluster och ett kluster hos en molnleverantör att agera mot.
-
-Säkerställ med `kubectl config current-context` att du vänder dig mot det kluster som du förväntar dig.
+Jag börjar med att skapa ett lokalt kluster med `minikube start`, jag kommer utgå ifrån att du kan hitta ett kluster du kan arbeta mot. Vi säkerställ med `kubectl config current-context` att vi vänder oss mot det kluster som vi förväntar oss.
 
 #### Stoppa in källkoden i ett nytt repository
 
-Jag tänker utgå ifrån ett nytt repository på github (samt att du kan skapa detta själv) och i detta lägga till källkoden för _Tipsrundan_:
+Jag har skapat ett nytt repository på github (och utgår från att du också gör det) och kommer i detta lägga till källkoden för _Tipsrundan_:
 
 ```bash
 # Clone repository
 git clone https://github.com/CuriosityFanClub/tipsrundan.git
-# Remove some files and foleders so as to not confuse git & github
+# Remove some files and folders so as to not confuse git & github
 rm -rf tipsrundan/.git tipsrundan/.github
 # Create a commit
 git add tipsrundan/* && git commit -m "Adds the tipsrundan application." && git push
@@ -201,7 +203,7 @@ jobs:
           git push
 ```
 
-Med ett definierat workflow så behöver vi också lite filer för kubernetes, alla dessa finns i slutet av dokumentet men här är en som vi kan börja med för att se om allting fungerar, `manifests/tipsrundan-deployment.yml`:
+Med ett definierat workflow så behöver vi också lite filer för kubernetes, alla dessa finns i slutet av dokumentet men här är en som vi kan börja med för att se om allting fungerar (observera att din github användare behöver fyllas i istället för `[GH_USER]`), `manifests/tipsrundan-deployment.yml`:
 
 ```yaml
 apiVersion: apps/v1
@@ -220,7 +222,7 @@ spec:
     spec:
       containers:
       - name: tipsrundan-container
-        image: ghcr.io/[DITT_GH_NAMN]/tipsrundan:latest
+        image: ghcr.io/[GH_USER]/tipsrundan:latest
         ports:
         - containerPort: 80
 ```
@@ -240,6 +242,10 @@ git push
 git checkout main
 ```
 
+#### Container registry
+
+Jag har hittills inte hittat någon bra lösning för att skapa detta automatiskt och samtidigt göra det _public_, jag löst det genom att göra `docker build` och `docker push` lokalt (se `docker-image.yml` för ungefär vad dessa var) och sedan genom webläsaren ändra tillgängligheten.
+
 #### Installera och konfigurera argocd
 
 ArgoCD kommer att leva innuti vårat kluster och kommer att kunna interagera med det innifrån. Det kommer också att lyssna efter förändringar i vårat repository och utifrån dessa försöka låta kubernetes nå det tillstånd som vi önskar.
@@ -253,11 +259,13 @@ kubectl create namespace argocd
 kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml -n argocd
 ```
 
-Installationen kommer ta en stund, men när den är färdig kan vi logga in med argocds cli enligt följande steg:
+Installationen kommer evntuellt att ta en stund, men när den är färdig kan vi logga in med argocds cli enligt följande steg:
 
 Exponera argocd-server i ett shell med: `kubectl port-forward svc/argocd-server 8080:443 -n argocd`
 
 Och sedan logga in från ett annat med: `argocd login localhost:8080 --username admin --password $(argocd admin initial-password -n argocd | head -n 1) --insecure`
+
+Efter detta bör vi byta adminanvändarens lösenord med: `argocd account update-password`
 
 Sedan vill vi skapa en ny applikation i ArgoCD med: `argocd app create tipsrundan --repo https://github.com/[GH_USER]/[REPO].git --revision prod --path manifests --dest-namespace default --dest-server https://kubernetes.default.svc --sync-policy auto --auto-prune --self-heal` (använd dina uppgifter för användarnamn och repository)
 
@@ -270,9 +278,12 @@ Som avslutning så behöver min lösning också följande filer under `manifests
 - mongodb-statefulset.yml
 - mongodb-service.yml
 
+TODO: Trigga workflow och se att förändringen plockas upp genom argocd
+
 ### Reflektioner
 
 Att låta github actions pusha till `prod`.
+Arbeta mot privat repository/container registry.
 Lösningen innehåller samma svaghet när det kommer till data persistens som tidigare.
 Att arbeta mot ett kluster hos en molnleverantör.
 Annat som kan utforskas i kubernetes.
